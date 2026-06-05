@@ -3,10 +3,11 @@ import { createSimulatedServer, destroySimulatedServer, type SimulatedServer } f
 import { healthTopic } from "./utils/topic";
 import type { ControlCommand, SimulatorConfig, FleetCommand } from "./types/metrics";
 
-const MQTT_BROKER = "mqtt://broker.hivemq.com:1883";
-const CONTROL_TOPIC_WILDCARD = "cloudmetric/simulator/control/+";
-const CONFIG_TOPIC = "cloudmetric/simulator/config";
-const FLEET_TOPIC = "cloudmetric/simulator/fleet";
+const TOPIC_PREFIX = process.env.MQTT_TOPIC_PREFIX || "cloudmetric";
+const MQTT_BROKER = process.env.MQTT_BROKER || "mqtt://broker.hivemq.com:1883";
+const CONTROL_TOPIC_WILDCARD = `${TOPIC_PREFIX}/simulator/control/+`;
+const CONFIG_TOPIC = `${TOPIC_PREFIX}/simulator/config`;
+const FLEET_TOPIC = `${TOPIC_PREFIX}/simulator/fleet`;
 
 const client = createMqttClient(MQTT_BROKER);
 
@@ -14,7 +15,7 @@ const servers = new Map<string, SimulatedServer>();
 
 function parseControlTopic(topic: string): string | null {
   const parts = topic.split('/');
-  if (parts.length === 4 && parts[0] === 'cloudmetric' && parts[1] === 'simulator' && parts[2] === 'control' && parts[3]) {
+  if (parts.length === 4 && parts[0] === TOPIC_PREFIX && parts[1] === 'simulator' && parts[2] === 'control' && parts[3]) {
     return parts[3];
   }
   return null;
@@ -112,7 +113,7 @@ client.on("connect", () => {
       if (err) {
         console.error("Error subscribing to topics:", err);
       } else {
-        console.log("Subscribed to control, config, and fleet topics");
+        console.log(`Subscribed to control, config, and fleet topics (prefix: ${TOPIC_PREFIX})`);
       }
     }
   );
